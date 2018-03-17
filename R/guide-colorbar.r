@@ -126,7 +126,7 @@ guide_colourbar <- function(
   default.unit = "line",
   reverse = FALSE,
   order = 0,
-  border = element_line(color = 'white', size=1, linetype = 'solid', lineend = 'butt'),
+  border = element_line(color = 'white', size=0.5, linetype = 'solid', lineend = 'butt'),
 
   ...) {
 
@@ -475,6 +475,9 @@ guide_gengrob.colorbar <- function(guide, theme) {
   gt <- gtable_add_grob(gt, grob.title, name = "title", clip = "off",
     t = 1 + min(vps$title.row), r = 1 + max(vps$title.col),
     b = 1 + max(vps$title.row), l = 1 + min(vps$title.col))
+  gt <- gtable_add_grob(gt, grob.border, name = "border", clip = "off",
+    t = 1 + min(vps$bar.row), r = 1 + max(vps$bar.col),
+    b = 1 + max(vps$bar.row), l = 1 + min(vps$bar.col))
   gt <- gtable_add_grob(gt, grob.ticks, name = "ticks", clip = "off",
     t = 1 + min(vps$bar.row), r = 1 + max(vps$bar.col),
     b = 1 + max(vps$bar.row), l = 1 + min(vps$bar.col))
