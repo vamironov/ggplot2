@@ -74,8 +74,8 @@ raster object. If \code{FALSE} then the colorbar is rendered as a set of
 rectangles. Note that not all graphics devices are capable of rendering
 raster image.}
 
-\item{ticks}{A logical specifying if tick marks on colorbar should be
-visible.}
+\item{ticks}{A \code{\link{element_line}} object specifying the appearance
+of the tick marks. For backwards compatibility, a logical can also be}
 
 \item{draw.ulim}{A logical specifying if the upper limit tick marks should
 be visible.}
@@ -136,6 +136,12 @@ p1 + guides(fill = guide_colorbar(label = FALSE))
 
 # no tick marks
 p1 + guides(fill = guide_colorbar(ticks = FALSE))
+
+# custom tick marks
+p1 + guides(fill = guide_colorbar(ticks = element_line(color = "black", size = 1, linetype = "solid")))
+
+# custom border
+p1 + guides(fill = guide_colorbar(border = element_line(color = "black", size = 1, linetype = "solid")))
 
 # label position
 p1 + guides(fill = guide_colorbar(label.position = "left"))

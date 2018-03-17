@@ -24,8 +24,9 @@
 #'   raster object. If \code{FALSE} then the colorbar is rendered as a set of
 #'   rectangles. Note that not all graphics devices are capable of rendering
 #'   raster image.
-#' @param ticks A logical specifying if tick marks on colorbar should be
-#'   visible.
+#' @param ticks A \code{\link{element_line}} object specifying the appearance
+#'   of the tick marks. For backwards compatibility, a logical can also be 
+#    supplied.
 #' @param draw.ulim A logical specifying if the upper limit tick marks should
 #'   be visible.
 #' @param draw.llim A logical specifying if the lower limit tick marks should
@@ -61,6 +62,12 @@
 #'
 #' # no tick marks
 #' p1 + guides(fill = guide_colorbar(ticks = FALSE))
+#'
+#' # custom tick marks
+#' p1 + guides(fill = guide_colorbar(ticks = element_line(color = "black", size = 1, linetype = "solid")))
+#'
+#' # custom border
+#' p1 + guides(fill = guide_colorbar(border = element_line(color = "black", size = 1, linetype = "solid")))
 #'
 #' # label position
 #' p1 + guides(fill = guide_colorbar(label.position = "left"))
@@ -110,7 +117,7 @@ guide_colourbar <- function(
   raster = TRUE,
 
   # ticks
-  ticks = TRUE,
+  ticks = element_line(color = 'white', size = 0.5, linetype = 'solid', lineend = 'butt'),
   draw.ulim= TRUE,
   draw.llim = TRUE,
 
@@ -119,11 +126,18 @@ guide_colourbar <- function(
   default.unit = "line",
   reverse = FALSE,
   order = 0,
+  border = element_line(color = 'white', size=1, linetype = 'solid', lineend = 'butt'),
 
   ...) {
 
   if (!is.null(barwidth) && !is.unit(barwidth)) barwidth <- unit(barwidth, default.unit)
   if (!is.null(barheight) && !is.unit(barheight)) barheight <- unit(barheight, default.unit)
+
+  # if logical argument supplied to tick then use defaults
+  if (identical(ticks, TRUE))
+    ticks <- element_line(color = "white", size = 0.5, linetype = "solid", lineend = "butt")
+  if (identical(ticks, FALSE))
+    ticks <- element_blank()
 
   structure(list(
     # title
@@ -295,7 +309,6 @@ guide_gengrob.colorbar <- function(guide, theme) {
     )
   )
 
-
   title_width <- convertWidth(grobWidth(grob.title), "mm")
   title_width.c <- c(title_width)
   title_height <- convertHeight(grobHeight(grob.title), "mm")
@@ -336,7 +349,7 @@ guide_gengrob.colorbar <- function(guide, theme) {
 
   # ticks
   grob.ticks <-
-    if (!guide$ticks) zeroGrob()
+    if (inherits(guide$ticks, "element_blank")) zeroGrob()
     else {
       switch(guide$direction,
         "horizontal" = {
@@ -352,7 +365,9 @@ guide_gengrob.colorbar <- function(guide, theme) {
           y1 = rep(tic_pos.c, 2)
         })
       segmentsGrob(x0 = x0, y0 = y0, x1 = x1, y1 = y1,
-                   default.units = "mm", gp = gpar(col = "white", lwd = 0.5, lineend = "butt"))
+                   default.units = "mm",
+                   gp = gpar(col = guide$ticks$colour, lwd = guide$ticks$size,
+                   lineend = guide$ticks$lineend, lty = guide$ticks$linetype))
     }
 
   # layout of bar and label
@@ -425,6 +440,23 @@ guide_gengrob.colorbar <- function(guide, theme) {
 
   # background
   grob.background <- element_render(theme, "legend.background")
+
+  # border
+  grob.border <- switch(guide$direction,
+      horizontal = {
+        bw <- barwidth.c / nrow(guide$bar)
+        rectGrob(x = 0, y = 0, vjust = 0, hjust = 0, width = bw * nrow(guide$bar),
+          height = barheight.c, default.units = "mm",
+          gp = gpar(col = guide$border$colour, fill = NA, lwd = guide$border$size,
+            lineend = guide$border$lineend, lty = guide$border$linetype))
+      },
+      vertical = {
+        bh <- barheight.c / nrow(guide$bar)
+        rectGrob(x = 0, y = 0, vjust = 0, hjust = 0, width = barwidth.c, height = bh * nrow(guide$bar),
+          default.units = "mm",
+          gp = gpar(col = guide$border$colour, fill = NA, lwd = guide$border$size,
+            lineend = guide$border$lineend, lty = guide$border$linetype))
+      })
 
   # padding
   padding <- convertUnit(theme$legend.margin %||% margin(), "mm")
